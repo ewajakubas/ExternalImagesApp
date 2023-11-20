@@ -12,14 +12,13 @@ public with sharing class PhotoService {
 
             Http http = new Http();
             HttpResponse response = http.send(request);
-            System.debug('response body ' + response.getBody());
 
-            List<Image__c> imagesListToInstert = New List<Image__c>();
+            List<Image__c> imagesListToInsert = New List<Image__c>();
             if (response != null && response.getStatusCode() == 200) {
                 List<PhotoWrapper.Image> externalImagesRecords = (List<PhotoWrapper.Image>) JSON.deserialize(response.getBody(), List<PhotoWrapper.Image>.class);
 
                 for (PhotoWrapper.Image externalImage : externalImagesRecords) {
-                    if (!imageExistsInDatabase(externalImage.id)) {
+                    if (!checkPhotoInDatabase(externalImage.id)) {
                         Image__c newImage = new Image__c(
                                 Id__c = externalImage.id,
                                 Title__c = externalImage.author + '_' + externalImage.id,
@@ -29,43 +28,40 @@ public with sharing class PhotoService {
                                 Width__c = externalImage.width,
                                 Height__c = externalImage.height
                         );
-                        imagesListToInstert.add(newImage);
+                        imagesListToInsert.add(newImage);
                     }
                 }
-                if (!imagesListToInstert.isEmpty()) {
-                    System.debug(Database.insert(imagesListToInstert, false));
+                if (!imagesListToInsert.isEmpty()) {
+                    Database.insert(imagesListToInsert, false);
                 }
             } else {
                 System.debug('External service request failed with status code: ' + response.getStatusCode());
-                System.debug('Response body: ' + response.getBody());
             }
         } catch (Exception ex) {
             System.debug('Exception occurred: ' + ex.getMessage());
         }
     }
 
-    private static Boolean imageExistsInDatabase(String externalImageId) {
+    private static Boolean checkPhotoInDatabase(String externalImageId) {
         List<Image__c> existingImages = new List<Image__c>();
         try {
             existingImages = [SELECT Id FROM Image__c WHERE Id__c = :externalImageId LIMIT 1];
         } catch (Exception ex) {
             System.debug('Exception occurred: ' + ex.getMessage());
         }
-        System.debug('existingImages ' + existingImages);
         return !existingImages.isEmpty();
     }
 
     @Future
     public static void deleteOldPhotos() {
-        // Calculate the datetime 10 minutes ago
-        Datetime tenMinutesAgo = Datetime.now().addMinutes(-10);
+        // Calculate the datetime 7 days ago
         Datetime sevenDaysAgo = Datetime.now().addDays(-7);
-        Datetime oneDaysAgo = Datetime.now().addDays(-1);
         try {
-            List<Image__c> recordsToDelete = [SELECT Id FROM Image__c WHERE CreatedDate < :tenMinutesAgo];
+            List<Image__c> recordsToDelete = [SELECT Id FROM Image__c WHERE CreatedDate < :sevenDaysAgo];
             Database.delete(recordsToDelete, false);
         } catch (Exception ex) {
             System.debug('Exception occurred: ' + ex.getMessage());
         }
     }
 }
+

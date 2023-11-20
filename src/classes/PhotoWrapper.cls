@@ -1,7 +1,3 @@
-/**
- * Created by Administrator on 17.11.2023.
- */
-
 public with sharing class PhotoWrapper {
 
     public class Image {
