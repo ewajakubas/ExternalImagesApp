@@ -1,0 +1,35 @@
+<template>
+    <lightning-card title="Picsum Images Gallery" icon-name="standard:photo">
+        <div class="slds-m-around_medium">
+            <lightning-input class="slds-p-around_small" label="Search by Title" type="search" value={searchTerm}
+                             onchange={handleSearch}></lightning-input>
+            <div class="slds-align_absolute-center" if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." variant="brand"></lightning-spinner>
+            </div>
+                <template if:true={filteredImages}>
+                    <lightning-layout multiple-rows >
+                        <template for:each={filteredImages} for:item="image" for:index="index">
+                            <lightning-layout-item key={image.id} size="3">
+                                <div class="slds-m-around_x-small">
+                                <div class="slds-around_medium slds-box">
+                                    <p class="slds-m-top_small">{index}</p>
+                                    <img src={image.download_url} alt={image.author} width="100%%" height="100%"/>
+                                    <p>{image.title}</p>
+                                </div>
+                                </div>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </template>
+            <template if:true={noMatchingRecords}>
+                <p>No matching records found.</p>
+            </template>
+            <template if:true={noRecords}>
+                    No images to display.
+            </template>
+        </div>
+    </lightning-card>
+    <template if:true={error}>
+        <p>{error}</p>
+    </template>
+</template>
